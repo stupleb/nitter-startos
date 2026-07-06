@@ -7,6 +7,7 @@ import { restoreInit } from '../backups'
 import { seedFiles } from './seedFiles'
 import { taskSessions } from './taskSessions'
 import { taskPrimaryUrl } from './taskPrimaryUrl'
+import { taskBasicAuth } from './taskBasicAuth'
 
 export const init = sdk.setupInit(
   restoreInit,
@@ -17,6 +18,7 @@ export const init = sdk.setupInit(
   actions,
   taskSessions,
   taskPrimaryUrl,
+  taskBasicAuth,
 )
 
 export const uninit = sdk.setupUninit(versionGraph)

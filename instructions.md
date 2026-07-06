@@ -38,6 +38,20 @@ Open the **Web UI** from Nitter's Dashboard tab. Search for any account (e.g. `e
 
 Every profile, search, and list has an RSS feed — append `/rss` to the URL (e.g. `/<username>/rss`). Feed links are generated from your **primary URL**; change it with the **Set Primary URL** action if you access Nitter from a different address (e.g. Tor).
 
+## Optional: Basic Auth
+
+By default your Nitter instance is open to anyone who can reach it (LAN, Tor, or a custom domain). To require a login:
+
+1. Run the **Configure Basic Auth** action (an install task also prompts you to decide).
+2. Switch the toggle on and submit. A username and password are generated and displayed — save them.
+3. The service restarts, and browsers will prompt for the credentials.
+
+Notes:
+
+- **RSS readers need the credentials too** — most support Basic Auth natively or via `https://username:password@your-address/...` URLs.
+- Re-running the action with the toggle on shows the same credentials again; turning it off keeps them stored, so re-enabling restores the same login.
+- Use **Reset Basic Auth Password** to rotate the password (only visible while Basic Auth is on).
+
 ## Display Preferences
 
 Theme, media, and layout preferences live on Nitter's own `/settings` page (the gear icon). They are stored per-browser in cookies, not on the server.

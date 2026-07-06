@@ -33,27 +33,28 @@ Nitter is a lightweight, JavaScript-free front-end for X (Twitter): browse profi
 
 ## Image and Container Runtime
 
-| Property      | Value                                                            |
-| ------------- | ---------------------------------------------------------------- |
-| Images        | `zedeus/nitter` (upstream, unmodified), `valkey/valkey` (cache)  |
-| Architectures | x86_64, aarch64                                                  |
-| Command       | `./nitter` in `/src` (upstream default), plus a Valkey daemon    |
+| Property      | Value                                                                                     |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| Images        | `zedeus/nitter` (upstream, unmodified), `valkey/valkey` (cache), `caddy` (reverse proxy)  |
+| Architectures | x86_64, aarch64                                                                            |
+| Command       | `./nitter` in `/src` (upstream default), plus Valkey and Caddy daemons                    |
 
-The upstream image is pinned to a specific master commit tag (upstream publishes no release tags). `NITTER_CONF_FILE` and `NITTER_SESSIONS_FILE` are set so nitter reads its config and sessions from the `main` volume instead of the image's baked-in defaults.
+The upstream image is pinned to a specific master commit tag (upstream publishes no release tags). `NITTER_CONF_FILE` and `NITTER_SESSIONS_FILE` are set so nitter reads its config and sessions from the `main` volume instead of the image's baked-in defaults. Caddy always fronts nitter (nitter listens internally on 8080; Caddy owns the exposed port) and enforces Basic Auth when enabled.
 
 ---
 
 ## Volume and Data Layout
 
-| Volume | Mount Point | Purpose                                          |
-| ------ | ----------- | ------------------------------------------------ |
-| `main` | `/data`     | `nitter.conf`, `sessions.json`, `sessions.jsonl` |
+| Volume | Mount Point | Purpose                                                        |
+| ------ | ----------- | -------------------------------------------------------------- |
+| `main` | `/data`     | `nitter.conf`, `sessions.json`, `sessions.jsonl`, `store.json` |
 
 - `nitter.conf` — the upstream config file, generated and managed by StartOS (Nim parsecfg format).
 - `sessions.json` — StartOS-managed source of truth for X account sessions, edited via actions.
 - `sessions.jsonl` — rendered from `sessions.json` on every service start; this is the file nitter actually reads.
+- `store.json` — StartOS-only settings: Basic Auth state and credentials (plaintext, so the actions can re-display them; the Caddyfile only ever receives a bcrypt hash).
 
-The Valkey cache is ephemeral and has no volume.
+The Valkey cache and Caddy proxy are ephemeral and have no volume (the Caddyfile is regenerated on every start).
 
 ---
 
@@ -62,6 +63,7 @@ The Valkey cache is ephemeral and has no volume.
 1. On install, `nitter.conf` is seeded with upstream defaults plus a randomly generated `hmacKey`, and the primary URL is defaulted to the service's `.local` address.
 2. A **critical task** blocks startup until you complete the **Add X Account Session** action — nitter cannot fetch any data (and exits at startup) without at least one session.
 3. Session cookies (`auth_token`, `ct0`) are copied from a logged-in x.com browser session; see `instructions.md` for the walkthrough. A burner account is strongly recommended.
+4. A non-blocking **important task** prompts you to decide whether to enable Basic Auth (off by default). The service starts and runs regardless of this choice.
 
 ---
 
@@ -71,15 +73,15 @@ The Valkey cache is ephemeral and has no volume.
 | ------------------------------------------------------------------------- | ----------------------------------------------- |
 | `Server` section (hostname, port, address), `Cache` section (Valkey), `hmacKey`, sessions | Per-browser display preferences (`/settings` page, stored in cookies) |
 
-Settings enforced by this package: nitter listens on `0.0.0.0:8080`; Valkey runs on `localhost:6379` with persistence disabled; `enableDebug` is forced off. The `Server.hostname` and `Server.https` values are controlled by the **Set Primary URL** action and determine how RSS and canonical links are generated.
+Settings enforced by this package: nitter listens on `0.0.0.0:8080` behind Caddy; Valkey runs on `localhost:6379` with persistence disabled; `enableDebug` is forced off. The `Server.hostname` and `Server.https` values are controlled by the **Set Primary URL** action and determine how RSS and canonical links are generated. Basic Auth (optional, off by default) is enforced by Caddy, not by nitter.
 
 ---
 
 ## Network Access and Interfaces
 
-| Interface | Port | Protocol | Purpose            |
-| --------- | ---- | -------- | ------------------ |
-| Web UI    | 8080 | HTTP     | Nitter web interface |
+| Interface | Port | Protocol | Purpose                                  |
+| --------- | ---- | -------- | ---------------------------------------- |
+| Web UI    | 80   | HTTP     | Nitter web interface (via Caddy proxy)   |
 
 **Access methods:**
 
@@ -97,8 +99,10 @@ Settings enforced by this package: nitter listens on `0.0.0.0:8080`; Valkey runs
 | Add X Account Session     | `add-session`     | Any status   | Store `auth_token` + `ct0` cookies (and optional username label) from a logged-in X account. Re-adding the same `auth_token` replaces that entry. |
 | Remove X Account Sessions | `remove-sessions` | Any status   | Select and delete stored sessions.                                                                |
 | Set Primary URL           | `set-primary-url` | Any status   | Choose which service URL nitter uses for generated links (RSS, canonical).                        |
+| Configure Basic Auth      | `configure-basic-auth` | Any status | Toggle Basic Auth on/off. Enabling generates (or re-displays) a username and password. Disabling keeps the stored credentials for later re-enable. |
+| Reset Basic Auth Password | `reset-basic-auth-password` | Any status; hidden while Basic Auth is off | Generate and display a new random password (username unchanged). |
 
-Session or config changes restart the service automatically (nitter only reads both at startup).
+Session, config, or Basic Auth changes restart the service automatically (everything is read at startup).
 
 ---
 
@@ -116,8 +120,9 @@ Session or config changes restart the service automatically (nitter only reads b
 
 | Check         | Method                 | Messages                                                                        |
 | ------------- | ---------------------- | ------------------------------------------------------------------------------- |
-| Web Interface | Port listening (8080)  | Success: "The web interface is ready" / Error: "The web interface is not ready" |
+| Web Interface | Port listening (8080, nitter internal) | Success: "The web interface is ready" / Error: "The web interface is not ready" |
 | Valkey        | `valkey-cli ping` (internal, hidden) | Not user-visible; gates nitter startup ordering.                   |
+| Caddy         | Port listening (80, internal, hidden) | Not user-visible; confirms the exposed proxy is up.               |
 
 ---
 
@@ -135,6 +140,7 @@ None.
 4. **`enableDebug` is forced off** — the `/.sessions` debug endpoint is not available.
 5. **No proxy support wired up** — upstream's `proxy`/`apiProxy` config options are not currently exposed.
 6. **RSS/canonical links use one primary URL** — nitter generates absolute links from a single configured hostname; links reflect the URL chosen in Set Primary URL, regardless of which address you're browsing from.
+7. **Basic Auth applies to everything** — when enabled, RSS readers must also be configured with the credentials (most support Basic Auth or `user:pass@host` URLs).
 
 ---
 
@@ -156,12 +162,12 @@ Build with `make` (requires `start-cli`). See the [StartOS Packaging Guide](http
 
 ```yaml
 package_id: nitter
-images: [zedeus/nitter, valkey/valkey]
+images: [zedeus/nitter, valkey/valkey, caddy]
 architectures: [x86_64, aarch64]
 volumes:
   main: /data
 ports:
-  ui: 8080
+  ui: 80
 dependencies: none
 startos_managed_env_vars:
   - NITTER_CONF_FILE
@@ -170,4 +176,6 @@ actions:
   - add-session
   - remove-sessions
   - set-primary-url
+  - configure-basic-auth
+  - reset-basic-auth-password
 ```

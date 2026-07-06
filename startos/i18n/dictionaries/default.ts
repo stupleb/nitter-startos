@@ -45,6 +45,30 @@ const dict = {
 
   // init/taskPrimaryUrl.ts
   'Primary URL removed. Select a new primary URL.': 30,
+
+  // main.ts (caddy)
+  'Caddy is ready': 31,
+  'Caddy is not ready': 32,
+
+  // actions/configureBasicAuth.ts
+  'Enable Basic Auth': 33,
+  'Require a username and password to access the Nitter web interface. Applies to everyone, including RSS readers.': 34,
+  'Configure Basic Auth': 35,
+  'Protect the Nitter web interface with a generated username and password, or turn the protection off.': 36,
+  'Basic Auth disabled': 37,
+  'The web interface no longer requires a login. The service restarts to apply changes.': 38,
+  'Basic Auth enabled': 39,
+  'Use these credentials when prompted for a login. The service restarts to apply changes.': 40,
+  Username: 41,
+  Password: 42,
+
+  // actions/resetBasicAuthPassword.ts
+  'Reset Basic Auth Password': 43,
+  'Generate a new random password for Basic Auth and display it. The service restarts to apply it.': 44,
+  'Basic Auth Credentials': 45,
+
+  // init/taskBasicAuth.ts
+  'Decide whether to protect the Nitter web interface with a username and password (Basic Auth).': 46,
 } as const
 
 /**
