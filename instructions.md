@@ -43,7 +43,7 @@ Every profile, search, and list has an RSS feed — append `/rss` to the URL (e.
 By default your Nitter instance is open to anyone who can reach it (LAN, Tor, or a custom domain). To require a login:
 
 1. Run the **Configure Basic Auth** action (an install task also prompts you to decide).
-2. Switch the toggle on and submit. A username and password are generated and displayed — save them.
+2. Switch the toggle on and submit. The credentials are displayed — username `admin`, with a generated password. Save them.
 3. The service restarts, and browsers will prompt for the credentials.
 
 Notes:

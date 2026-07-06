@@ -5,6 +5,8 @@ import { sdk } from './sdk'
 export const uiPort = 80
 export const nitterPort = 8080
 
+export const basicAuthUsername = 'admin'
+
 // Paths inside the nitter container (the 'main' volume is mounted at /data)
 export const nitterConfPath = '/data/nitter.conf'
 export const sessionsJsonlPath = '/data/sessions.jsonl'

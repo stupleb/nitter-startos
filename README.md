@@ -99,7 +99,7 @@ Settings enforced by this package: nitter listens on `0.0.0.0:8080` behind Caddy
 | Add X Account Session     | `add-session`     | Any status   | Store `auth_token` + `ct0` cookies (and optional username label) from a logged-in X account. Re-adding the same `auth_token` replaces that entry. |
 | Remove X Account Sessions | `remove-sessions` | Any status   | Select and delete stored sessions.                                                                |
 | Set Primary URL           | `set-primary-url` | Any status   | Choose which service URL nitter uses for generated links (RSS, canonical).                        |
-| Configure Basic Auth      | `configure-basic-auth` | Any status | Toggle Basic Auth on/off. Enabling generates (or re-displays) a username and password. Disabling keeps the stored credentials for later re-enable. |
+| Configure Basic Auth      | `configure-basic-auth` | Any status | Toggle Basic Auth on/off. Enabling generates (or re-displays) the credentials — username `admin`, random password. Disabling keeps the stored credentials for later re-enable. |
 | Reset Basic Auth Password | `reset-basic-auth-password` | Any status; hidden while Basic Auth is off | Generate and display a new random password (username unchanged). |
 
 Session, config, or Basic Auth changes restart the service automatically (everything is read at startup).
