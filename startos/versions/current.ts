@@ -3,7 +3,7 @@ import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 // Upstream has no tagged releases; the version is the date of the pinned
 // master commit (see UPDATING.md).
 export const current = VersionInfo.of({
-  version: '2026.6.30:2',
+  version: '2026.6.30:0',
   releaseNotes: {
     en_US:
       'Initial release of Nitter for StartOS (upstream master @ 7f7092f, 2026-06-30).',
