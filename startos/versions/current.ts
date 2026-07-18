@@ -3,18 +3,15 @@ import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 // Upstream has no tagged releases; the version is the date of the pinned
 // master commit (see UPDATING.md).
 export const current = VersionInfo.of({
-  version: '2026.6.30:0',
+  version: '2026.6.30:1',
   releaseNotes: {
-    en_US:
-      'Initial release of Nitter for StartOS (upstream master @ 7f7092f, 2026-06-30).',
+    en_US: 'Rebuilt on StartOS SDK 2.0.5. No changes to functionality.',
     es_ES:
-      'Versión inicial de Nitter para StartOS (upstream master @ 7f7092f, 2026-06-30).',
-    de_DE:
-      'Erste Version von Nitter für StartOS (Upstream master @ 7f7092f, 2026-06-30).',
-    pl_PL:
-      'Pierwsze wydanie Nitter dla StartOS (upstream master @ 7f7092f, 2026-06-30).',
+      'Reconstruido con StartOS SDK 2.0.5. Sin cambios en la funcionalidad.',
+    de_DE: 'Neu erstellt mit StartOS SDK 2.0.5. Keine funktionalen Änderungen.',
+    pl_PL: 'Przebudowano na StartOS SDK 2.0.5. Bez zmian w funkcjonalności.',
     fr_FR:
-      'Version initiale de Nitter pour StartOS (upstream master @ 7f7092f, 2026-06-30).',
+      'Reconstruit avec le SDK StartOS 2.0.5. Aucun changement fonctionnel.',
   },
   migrations: {
     up: async ({ effects }) => {},
