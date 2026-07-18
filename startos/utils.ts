@@ -11,9 +11,17 @@ export const basicAuthUsername = 'admin'
 export const nitterConfPath = '/data/nitter.conf'
 export const sessionsJsonlPath = '/data/sessions.jsonl'
 
-export async function getNonLocalUrls(effects: T.Effects) {
-  return sdk.serviceInterface
-    .getOwn(effects, 'ui', (i) => i?.addressInfo?.nonLocal.format() || [])
+export async function getNonLocalUrls(effects: T.Effects): Promise<string[]> {
+  // 2.0: interfaces are reached through their host. Walk the 'ui-multi' host
+  // (the MultiHost id from interfaces.ts) to the 'ui' interface; its
+  // addressInfo comes back pre-filled with the filter/format helpers.
+  return sdk.host
+    .getOwn(effects, 'ui-multi', (host) => {
+      const ui = Object.values(host?.bindings ?? {})
+        .flatMap((b) => Object.values(b.interfaces))
+        .find((i) => i.id === 'ui')
+      return ui?.addressInfo.nonLocal.format() ?? []
+    })
     .const()
 }
 

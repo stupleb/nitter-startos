@@ -21,14 +21,16 @@ export const main = sdk.setupMain(async ({ effects }) => {
     (await sessionsJson.read((s) => s.sessions).const(effects)) || []
   const basicAuth = await storeJson.read((s) => s.basicAuth).const(effects)
 
-  const valkeySub = await sdk.SubContainer.of(
+  // 2.0: SubContainer.of() is lazy and synchronous — it materializes on first
+  // use (rootfs/exec), so no await here.
+  const valkeySub = sdk.SubContainer.of(
     effects,
     { imageId: 'valkey' },
     null,
     'valkey-sub',
   )
 
-  const nitterSub = await sdk.SubContainer.of(
+  const nitterSub = sdk.SubContainer.of(
     effects,
     { imageId: 'nitter' },
     sdk.Mounts.of().mountVolume({
@@ -40,7 +42,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
     'nitter-sub',
   )
 
-  const caddySub = await sdk.SubContainer.of(
+  const caddySub = sdk.SubContainer.of(
     effects,
     { imageId: 'caddy' },
     null,
@@ -51,7 +53,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const jsonl = sessions
     .map((s) => JSON.stringify({ kind: 'cookie', ...s }))
     .join('\n')
-  await writeFile(`${nitterSub.rootfs}${sessionsJsonlPath}`, jsonl + '\n')
+  await writeFile(`${await nitterSub.rootfs}${sessionsJsonlPath}`, jsonl + '\n')
 
   // Write the Caddyfile, bcrypt-hashing the Basic Auth password if enabled
   let auth: { username: string; hash: string } | null = null
@@ -67,7 +69,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       throw new Error(`caddy hash-password failed: ${res.stderr.toString()}`)
     auth = { username: basicAuth.username, hash }
   }
-  await writeFile(`${caddySub.rootfs}/Caddyfile`, getCaddyfile(auth))
+  await writeFile(`${await caddySub.rootfs}/Caddyfile`, getCaddyfile(auth))
 
   return sdk.Daemons.of(effects)
     .addDaemon('valkey', {
