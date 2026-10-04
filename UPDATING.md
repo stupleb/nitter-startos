@@ -13,7 +13,7 @@ curl -s 'https://hub.docker.com/v2/repositories/zedeus/nitter/tags?page_size=10'
   | python3 -c "import json,sys; [print(t['name'], t['last_updated']) for t in json.load(sys.stdin)['results']]"
 ```
 
-Pick the newest full-commit-hash tag (do not pin `latest` — it moves).
+Pick the newest full-commit-hash tag (do not pin `latest` — it moves). Confirm the tag has both architectures before pinning it — `docker manifest inspect zedeus/nitter:<commit hash>` should list `amd64` and `arm64`. A commit whose image has only finished building for one arch will fail the other arch's build.
 
 ## Applying the bump
 
