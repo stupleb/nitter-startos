@@ -1,12 +1,14 @@
 # Nitter
 
-Nitter is a privacy-respecting front-end for X (Twitter). Browse profiles, tweets, and searches without ads, tracking, or JavaScript, and follow accounts via RSS — all served from your own server.
-
 ## Before You Start: You Need an X Account
 
 X removed all anonymous access, so **every Nitter instance needs session cookies from a real, logged-in X account**. Nitter uses that account behind the scenes to fetch data.
 
 > **Use a burner account.** X may restrict or suspend accounts used for scraping. Do not use an account you care about. A fresh account works fine — it does not need followers or a verified phone number (email is usually enough).
+
+## Documentation
+
+- [Nitter on GitHub](https://github.com/zedeus/nitter) — the upstream project's README and documentation.
 
 ## Getting Set Up
 
