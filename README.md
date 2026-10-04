@@ -60,7 +60,7 @@ The package manages four files on the `main` volume. Three are typed file models
 
 - **`nitter.conf`** — the upstream Nim `parsecfg` config. Seeded once at install with upstream defaults plus a randomly generated `hmacKey`. Nitter reads this file directly, so a hand edit takes effect. Two caveats on ownership: the `Server.hostname` / `Server.https` keys are rewritten by the **Set Primary URL** action and the first-run primary-URL step, and the keys that wire Nitter into StartOS are re-asserted whenever any action writes the file — `Server.address` (`0.0.0.0`), `Server.port` (`8080`), `Server.staticDir`, `Cache.redisHost`/`redisPort` (the Valkey endpoint), and `Config.enableDebug` (held off). Every other key (title, cache durations, `enableRSS`, request tuning, …) is yours; a valid hand edit to those survives.
 - **`sessions.json`** — the source of truth for X account sessions, an array of `{ auth_token, ct0, username? }`. Written only by the Add / Remove Session actions, which replace the array wholesale; it is seeded empty. A hand edit is lost the next time either action runs.
-- **`store.json`** — StartOS-only state with no upstream equivalent: the Basic Auth record (`enabled`, `username`, `password`). The password is kept in plaintext so the configure/reset actions can re-display it; only a bcrypt hash of it ever reaches Caddy. Written by the Basic Auth actions; seeded disabled.
+- **`store.json`** — StartOS-only state with no upstream equivalent: the Basic Auth record (`enabled`, `username`, `password`). The password is kept in plaintext so the configure/reset actions can re-display it; only a bcrypt hash of it ever reaches Caddy. Written by the Basic Auth actions and not seeded at install: the file first appears when Configure Basic Auth runs, and until then its absence is what marks Basic Auth as undecided (see [Tasks](#tasks)).
 - **`sessions.jsonl`** — not a model. Rendered from `sessions.json` into the file Nitter actually reads (`NITTER_SESSIONS_FILE`) on every start, one `{"kind":"cookie",…}` object per line. A hand edit is overwritten each start.
 
 ---
@@ -87,7 +87,7 @@ Caddy listens on port 80 and reverse-proxies to Nitter on its internal port; whe
 
 Nitter has no upstream setup wizard; StartOS does the first-run setup through init and tasks.
 
-1. `nitter.conf`, `sessions.json`, and `store.json` are seeded with their defaults, including a random `hmacKey`.
+1. `nitter.conf` and `sessions.json` are seeded with their defaults, including a random `hmacKey`.
 2. If the server already has a reachable address, the primary URL is defaulted to its `.local` address (the first non-local address otherwise). This is what RSS and canonical links are built from.
 3. A **critical** task requires **Add X Account Session** before the service can start — Nitter cannot fetch anything without at least one session. See [Tasks](#tasks).
 4. A non-blocking **important** task invites you to decide on Basic Auth. The service starts and runs whatever you choose.
@@ -113,8 +113,8 @@ All actions are available in any service status. Session cookies are write-only 
 The package raises three tasks. The first two block or gate the service; the third is advisory.
 
 - **Add X Account Session** (`critical`) — raised while `sessions.json` holds no sessions. A critical task blocks startup and suspends the ordinary controls until it is satisfied. Cleared by adding a session; returns if every session is later removed.
-- **Set Primary URL** (`critical`) — raised when a primary URL is already set but is no longer among the service's current addresses (e.g. a domain was removed). Cleared by choosing a new primary URL. Not raised on a fresh install, where the primary URL is defaulted instead.
-- **Configure Basic Auth** (`important`) — raised once at install as a prompt to decide on Basic Auth. Non-blocking; cleared by running the action.
+- **Set Primary URL** (`critical`) — raised when a primary URL is already set but the service's current addresses don't include it (e.g. a domain was removed). Not raised while the address list is empty, which means the addresses aren't known yet, nor on a fresh install, where the primary URL is defaulted instead. Clears itself once the primary URL is among the addresses again, or when you choose a new one. Clearing doesn't restart a service the task already stopped.
+- **Configure Basic Auth** (`important`) — raised until Configure Basic Auth has run once, whichever way you choose. That first run creates `store.json`; from then on the task is cleared and doesn't return. Non-blocking.
 
 ---
 
