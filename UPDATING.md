@@ -4,7 +4,7 @@ This package wraps [zedeus/nitter](https://github.com/zedeus/nitter), consumed a
 
 ## Determining the upstream version
 
-Upstream publishes **no release tags** — the image is built from every master commit and tagged with the full commit hash (plus a moving `latest`). This package therefore uses a **date-based version**: the commit date of the pinned image, as `YYYY.M.D`.
+Upstream publishes **no release tags** — the image is built from master commits and tagged with the full commit hash (plus a moving `latest`). Commits that only touch docs get no image, so the newest tag can trail master. This package therefore uses a **date-based version**: the commit date of the pinned image, as `YYYY.M.D`.
 
 To find the newest image and its commit date:
 
